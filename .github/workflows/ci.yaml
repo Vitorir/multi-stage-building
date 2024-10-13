@@ -1,10 +1,8 @@
-name: CI
+name: CI/CD
 
 on:
   push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+    branches: [master] 
 
 permissions:
   contents: write
@@ -29,7 +27,33 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
       with:
-        context: laravel
-        file: Dockerfile.prod
+        context: .
+        file: ./Dockerfile.prod
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/laravel-app:latest
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/laravel-app:${{ github.sha }}, ${{ secrets.DOCKERHUB_USERNAME }}/laravel-app:latest
+
+    # Se você precisar atualizar arquivos Kubernetes, descomente e ajuste as próximas etapas
+
+    # - name: Setup Kustomize
+    #   uses: imranismail/setup-kustomize@v1
+    #   with: 
+    #     kustomize-version: "3.6.1"
+
+    # - name: Update Kubernetes resources
+    #   env:
+    #     DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+    #   run: |
+    #     cd k8s
+    #     kustomize edit set image laravel-app=$DOCKER_USERNAME/laravel-app:${{ github.sha }}
+
+    # - name: Commit
+    #   run: |
+    #     git config --local user.email "action@github.com"
+    #     git config --local user.name "GitHub Action"
+    #     git commit -am "Bump docker version"
+
+    # - name: Push
+    #   uses: ad-m/github-push-action@master
+    #   with:
+    #     github_token: ${{ secrets.GITHUB_TOKEN }}
+    #     repository: Vitorir/laravel

@@ -29,7 +29,7 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
       with:
-        context: ./laravel
-        file: ./laravel/Dockerfile.prod
+        context: laravel
+        file: Dockerfile.prod
         push: true
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/laravel-app:latest

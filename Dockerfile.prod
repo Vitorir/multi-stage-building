@@ -1,38 +1,35 @@
-# Criar um Alias pro estágio 1
+# Estágio 1: Build
 FROM php:7.4-cli AS builder
 
-WORKDIR /var/wwww
+WORKDIR /var/www
 
-# Baixar dependências
 RUN apt-get update && \
-    apt-get install libzip-dev -y && \
+    apt-get install -y libzip-dev && \
     docker-php-ext-install zip
 
-# Instalação do gerenciador de pacotes composer 
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && \
     php composer-setup.php && \
     php -r "unlink('composer-setup.php');"
 
-RUN php composer.phar create-project laravel/laravel laravel
+COPY . /var/www/laravel
 
-ENTRYPOINT [ "php", "laravel/artisan", "serve" ]
-CMD [ "--host=0.0.0.0" ]
+WORKDIR /var/www/laravel
 
+RUN php /var/www/composer.phar install --no-dev
 
-# Segundo estágio
+# Estágio 2: Produção
 FROM php:7.4-fpm-alpine
 
 WORKDIR /var/www
 
-# Remover pasta html pra n ter problema
 RUN rm -rf /var/www/html
 
-# copiar o conteudo do build 1
+# Copiar o conteúdo do build 1
 COPY --from=builder /var/www/laravel .
 
-# Dar permissão pro usuario www-data e grupo www-data ser dono do conteudo /var/www pra dar comandos e gravar arquivos dentro da pasta
-# pra armazenar dados de cache e logs, etc 
+# Dar permissão pro usuário www-data e grupo www-data ser dono do conteúdo /var/www
 RUN chown -R www-data:www-data /var/www
 
 EXPOSE 9000
-CMD [ "php-fpm" ]
+
+CMD ["php-fpm"]

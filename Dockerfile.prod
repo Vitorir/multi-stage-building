@@ -1,35 +1,22 @@
-# Estágio 1: Build
 FROM php:7.4-cli AS builder
 
 WORKDIR /var/www
 
 RUN apt-get update && \
-    apt-get install -y libzip-dev && \
+    apt-get install libzip-dev -y && \
     docker-php-ext-install zip
 
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && \
     php composer-setup.php && \
     php -r "unlink('composer-setup.php');"
 
-COPY . /var/www/laravel
+RUN php composer.phar create-project --prefer-dist laravel/laravel laravel
 
-WORKDIR /var/www/laravel
-
-RUN php /var/www/composer.phar install --no-dev
-
-# Estágio 2: Produção
 FROM php:7.4-fpm-alpine
-
 WORKDIR /var/www
-
 RUN rm -rf /var/www/html
-
-# Copiar o conteúdo do build 1
 COPY --from=builder /var/www/laravel .
-
-# Dar permissão pro usuário www-data e grupo www-data ser dono do conteúdo /var/www
+RUN ln -s public html
 RUN chown -R www-data:www-data /var/www
-
 EXPOSE 9000
-
-CMD ["php-fpm"]
+CMD [ "php-fpm" ]

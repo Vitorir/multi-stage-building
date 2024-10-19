@@ -24,14 +24,25 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Build and push Docker image
+    - name: Build and push development Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/laravel-app:${{ github.sha }}
+          ${{ secrets.DOCKERHUB_USERNAME }}/laravel-app:latest
+
+    - name: Build and push production Docker image
       uses: docker/build-push-action@v4
       with:
         context: .
         file: ./Dockerfile.prod
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/laravel-app:${{ github.sha }}, ${{ secrets.DOCKERHUB_USERNAME }}/laravel-app:latest
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/laravel-app:prod
 
+    # ... resto do arquivo permanece o mesmo ...
     # Se você precisar atualizar arquivos Kubernetes, descomente e ajuste as próximas etapas
 
     # - name: Setup Kustomize
